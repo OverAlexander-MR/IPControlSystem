@@ -10,7 +10,8 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize
+
+from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize, QTimer
 import sys
 
 # ---------------- Dracula palette ----------------
@@ -26,7 +27,7 @@ DRACULA = {
     "orange": "#ffb86c",
 }
 
-from layouts import PendulumPage
+from layouts import PendulumPage, RandomPendulumData
 
 
 class SidebarButton(QPushButton):
@@ -45,7 +46,6 @@ class SidebarButton(QPushButton):
             self.setText(f"{self.emoji}  {self.label_text}")
         else:
             self.setText(self.emoji)
-        # Ajustar el tamaño del botón según el estado
         self.adjustSize()
 
 
@@ -70,9 +70,7 @@ class MainWindow(QMainWindow):
         # Sidebar frame
         self.sidebar = QFrame()
         self.sidebar.setObjectName("sidebar")
-        self.sidebar.setFixedWidth(
-            self.sidebar_expanded_width
-        )  # Inicialmente expandido
+        self.sidebar.setFixedWidth(self.sidebar_expanded_width)
         self.sidebar_layout = QVBoxLayout(self.sidebar)
         self.sidebar_layout.setContentsMargins(8, 8, 8, 8)
         self.sidebar_layout.setSpacing(6)
@@ -116,7 +114,6 @@ class MainWindow(QMainWindow):
 
         # Pages
         self.page_home = self._make_page("Home", "Bienvenido — Péndulo Invertido")
-        # self.page_pendulum = self._make_page("Pendulum", "Visualización y controles del péndulo")
         self.page_pendulum = PendulumPage()
         self.page_train = self._make_page("Train", "Entrenamiento / Simulación")
         self.page_graphs = self._make_page(
@@ -137,6 +134,15 @@ class MainWindow(QMainWindow):
         self.nav_buttons[0].setChecked(True)
         self.stack.setCurrentIndex(0)
         self.apply_stylesheet()
+
+        # Simulation setup
+        self.sim_timer = QTimer()
+        self.sim_timer.timeout.connect(self.update_simulation)
+        self.simulator = RandomPendulumData()
+
+        # Connect pendulum page signals
+        self.page_pendulum.btn_run.clicked.connect(self.start_simulation)
+        self.page_pendulum.btn_stop.clicked.connect(self.stop_simulation)
 
     def _make_page(self, title: str, subtitle: str) -> QWidget:
         w = QWidget()
@@ -261,6 +267,21 @@ class MainWindow(QMainWindow):
         }}
         """
         self.setStyleSheet(s)
+
+    def start_simulation(self):
+        """Inicia la simulación del péndulo"""
+        print("Iniciando simulación del péndulo")
+        self.sim_timer.start(30)  # ~33 FPS
+
+    def stop_simulation(self):
+        """Detiene la simulación del péndulo"""
+        print("Deteniendo simulación del péndulo")
+        self.sim_timer.stop()
+
+    def update_simulation(self):
+        """Actualiza el estado del péndulo con nuevos datos de simulación"""
+        cart_pos, cart_vel, theta, theta_dot = self.simulator.next(0.05)
+        self.page_pendulum.update_pendulum_state(cart_pos, cart_vel, 0, theta_dot)
 
 
 if __name__ == "__main__":
