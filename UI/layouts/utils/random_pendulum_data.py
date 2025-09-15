@@ -1,26 +1,3 @@
-"""random_pendulum_data.py
-
-Simulación física del péndulo invertido montado sobre un carro.
-
-Provee la clase `RandomPendulumData` (por compatibilidad con la API previa) que
-implementa una simulación realista mediante integración numérica (RK4) de las
-ecuaciones dinámicas del sistema.
-
-API principal:
-    sim = RandomPendulumData()            # instancia con parámetros por defecto
-    state = sim.next(dt)                  # avanza dt segundos y retorna (x_norm, x_dot, theta, theta_dot)
-
-Opciones de configuración (al crear la instancia):
-    RandomPendulumData(M=1.0, m=0.1, l=0.5, track_half_range=2.0, ...)
-
-- x_norm está normalizado en [-1,1] respecto a track_half_range (metros).
-- theta está en radianes, con 0 = vertical hacia arriba.
-
-Se permite pasar una función control_func(state, t) que devuelva la fuerza F (N)
-aplicada al carro en cada paso; por defecto F=0 (sin control).
-
-"""
-
 from math import sin, cos
 from typing import Callable, Optional, Tuple
 

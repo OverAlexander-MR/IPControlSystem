@@ -281,7 +281,7 @@ class MainWindow(QMainWindow):
     def update_simulation(self):
         """Actualiza el estado del péndulo con nuevos datos de simulación"""
         cart_pos, cart_vel, theta, theta_dot = self.simulator.next(0.05)
-        self.page_pendulum.update_pendulum_state(cart_pos, cart_vel, 0, theta_dot)
+        self.page_pendulum.update_pendulum_state(cart_pos, cart_vel, theta, theta_dot)
 
 
 if __name__ == "__main__":

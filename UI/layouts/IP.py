@@ -92,15 +92,15 @@ class PendulumWidget(QWidget):
         cart_x = x_pix - cart_w / 2
         cart_y = h * 0.55  # baseline vertical position (will scale with widget)
 
-        # Draw track line
+        # Draw track line, te 16 is a hight fro the reels
         pen = QPen(DRACULA["muted"])
         pen.setWidth(2)
         painter.setPen(pen)
         painter.drawLine(
             int(track_left),
-            int(cart_y + cart_h / 2 + 10),
+            int(cart_y + cart_h + 16),
             int(track_right),
-            int(cart_y + cart_h / 2 + 10),
+            int(cart_y + cart_h + 16),
         )
 
         # Draw cart body
@@ -176,6 +176,6 @@ if __name__ == "__main__":
 
     timer = QTimer()
     timer.timeout.connect(random_update)
-    timer.start(200)
+    timer.start(100)
 
     sys.exit(app.exec())
