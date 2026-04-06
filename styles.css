@@ -237,7 +237,39 @@ body {
   margin-top: 16px;
 }
 
+/* #pendulumCanvas {
+  background-color: var(--bg);
+  border-radius: 4px;
+  width: 100%;
+  height: auto;
+  max-width: 800px;
+} */
+
+#pendulumCanvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background-color: var(--bg);
+  /* Mantener proporción fija */
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  /* Evitar pixelado */
+  image-rendering: crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 /* Visualization Panel */
+
+/* Asegurar que el contenedor no cause problemas de escala */
+/* .visualization-panel {
+  overflow-x: auto;
+  overflow-y: hidden;
+} */
+
 .visualization-panel {
   background-color: var(--panel);
   border: 1px solid var(--muted);
@@ -248,14 +280,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 450px;
-}
-
-#pendulumCanvas {
-  background-color: var(--bg);
-  border-radius: 4px;
-  width: 100%;
-  height: auto;
-  max-width: 800px;
+  overflow: hidden;
 }
 
 /* Stats Panel */
