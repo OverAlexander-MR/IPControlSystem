@@ -1,9 +1,34 @@
 <!doctype html>
-<html>
+<html lang="es">
   <head>
-    <title>Mi web</title>
+    <meta charset="UTF-8" />
+    <title>IP Control System</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>Hola mundo test</h1>
+    <div class="container">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <h2>Control</h2>
+        <button onclick="showView('home')">Inicio</button>
+        <button onclick="showView('panel')">Panel</button>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main">
+        <div id="home" class="view active">
+          <h1>Bienvenido</h1>
+          <p>Sistema de control del péndulo</p>
+        </div>
+
+        <div id="panel" class="view">
+          <h1>Panel</h1>
+          <button onclick="enviarComando()">Enviar comando</button>
+          <p id="respuesta"></p>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
   </body>
 </html>
