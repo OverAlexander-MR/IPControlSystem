@@ -2,29 +2,47 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>IP Control System</title>
+    <title>Pendulum Control</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
       <!-- Sidebar -->
       <div class="sidebar">
-        <h2>Control</h2>
-        <button onclick="showView('home')">Inicio</button>
-        <button onclick="showView('panel')">Panel</button>
+        <h2>☰</h2>
+        <ul>
+          <li>🏠 Home</li>
+          <li class="active">🟣 Pendulum</li>
+          <li>📊 Train</li>
+          <li>📈 Gráficas</li>
+        </ul>
+        <div class="exit">⏻ Exit</div>
       </div>
 
-      <!-- Main Content -->
+      <!-- Main -->
       <div class="main">
-        <div id="home" class="view active">
-          <h1>Bienvenido</h1>
-          <p>Sistema de control del péndulo</p>
+        <h1>Pendulum</h1>
+        <p class="subtitle">Visualización y controles del péndulo</p>
+
+        <!-- Controls -->
+        <div class="controls">
+          <label>Tipo de control:</label>
+          <select>
+            <option>LQR</option>
+          </select>
+
+          <label>Puerto COM:</label>
+          <select>
+            <option>COM3</option>
+          </select>
+
+          <button onclick="start()">▶</button>
+          <button onclick="stop()">⏸</button>
         </div>
 
-        <div id="panel" class="view">
-          <h1>Panel</h1>
-          <button onclick="enviarComando()">Enviar comando</button>
-          <p id="respuesta"></p>
+        <!-- Canvas -->
+        <div class="canvas-container">
+          <canvas id="pendulumCanvas"></canvas>
         </div>
       </div>
     </div>

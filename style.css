@@ -1,6 +1,8 @@
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
+  background: #1e1e2f;
+  color: white;
 }
 
 .container {
@@ -8,37 +10,73 @@ body {
   height: 100vh;
 }
 
+/* Sidebar */
 .sidebar {
   width: 200px;
-  background: #1e1e2f;
-  color: white;
+  background: #181825;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
-.sidebar button {
-  display: block;
-  width: 100%;
-  margin: 10px 0;
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
   padding: 10px;
-  background: #333;
-  color: white;
-  border: none;
+  margin: 5px 0;
   cursor: pointer;
 }
 
-.sidebar button:hover {
-  background: #555;
+.sidebar .active {
+  background: #3a3a5c;
+  border-radius: 5px;
 }
 
+.exit {
+  margin-top: auto;
+  padding: 10px;
+}
+
+/* Main */
 .main {
   flex: 1;
   padding: 20px;
 }
 
-.view {
-  display: none;
+.subtitle {
+  color: #aaa;
 }
 
-.view.active {
-  display: block;
+/* Controls */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #2a2a3d;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.controls select,
+.controls button {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 5px;
+}
+
+/* Canvas */
+.canvas-container {
+  margin-top: 20px;
+  background: #2a2a3d;
+  height: 70%;
+  border-radius: 5px;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
 }
