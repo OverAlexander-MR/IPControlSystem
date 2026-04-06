@@ -58,7 +58,7 @@ function draw() {
 function update() {
   if (running) {
     const g = 0.01;
-    velocity += -g * Math.sin(angle);
+    // velocity += -g * Math.sin(angle);
     angle += velocity;
   }
 }
