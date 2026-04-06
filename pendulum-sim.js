@@ -172,7 +172,7 @@ class PendulumDrawer {
     const container = this.canvas.parentElement;
     const rect = container.getBoundingClientRect();
     this.canvas.width = Math.min(800, rect.width - 40);
-    this.canvas.height = 400;
+    this.canvas.height = 200;
   }
 
   draw(cartPos, theta) {
