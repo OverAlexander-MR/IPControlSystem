@@ -1,5 +1,34 @@
+# Environment files
 .env
-UI/icons
-cli.text
+.env.local
+.env.*.local
+
+# Virtual environments
+venv/
+.env/
+env/
+ENV/
+bin/
+lib/
+share/
+pyvenv.cfg
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
+
+# PRIVATE DIRECTORIES (Security)
+# As requested, these will NOT be uploaded to GitHub
 backend/
 cloudflared/
+
+# Project specific
+cli.text
+frontend/backend_url.json
+
+# OS files
+.DS_Store
+Thumbs.db

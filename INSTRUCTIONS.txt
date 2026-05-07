@@ -1,0 +1,103 @@
+================================================================================
+    INVERTED PENDULUM CONTROL SYSTEM - FULL SETUP & OPERATION GUIDE
+================================================================================
+
+1. PROJECT OVERVIEW
+-------------------
+This project is a hybrid architecture:
+- Frontend: Deployed on Cloudflare Pages (Public).
+- Backend: Runs locally on your Arch Linux machine (Private).
+- Bridge: Cloudflare Tunnel (cloudflared) creates a secure tunnel between them.
+
+This setup allows you to control local hardware or complex Python simulations 
+directly from a web browser anywhere in the world without opening ports.
+
+2. SYSTEM ARCHITECTURE (HOW IT WORKS)
+-------------------------------------
+[ BROWSER ] --- (HTTP POST) ---> [ CLOUDFLARE EDGE ] --- (TUNNEL) ---> [ LOCAL BACKEND ]
+
+- app.js (Frontend): Detects when you change the Control Type or COM Port. 
+  It sends an async Fetch request (JSON) to the backend URL.
+- server.py (Backend): A FastAPI server that listens for these requests. 
+  It prints the commands to your console and (optionally) sends them to 
+  hardware via Serial/COM.
+- cloudflared (Tunnel): Acts as a secure proxy. It takes traffic from your 
+  subdomain (api.ipcontrolsystem.pages.dev) and pipes it to localhost:8000.
+
+3. LOCAL DEVELOPMENT SETUP (TESTING ON YOUR MACHINE)
+----------------------------------------------------
+To test without using the internet:
+
+Step 1: Start the Backend
+   $ cd backend
+   $ source ../.env/bin/activate
+   $ python server.py
+   (Wait for: "Uvicorn running on http://0.0.0.0:8000")
+
+Step 2: Start a Local Web Server
+   $ cd frontend
+   $ python -m http.server 3000
+
+Step 3: Access
+   Open browser to: http://localhost:3000
+   - The status dot will turn GREEN automatically.
+   - app.js (now in frontend/) detects 'localhost' and uses http://localhost:8000.
+
+4. PRODUCTION SETUP (CLOUDFLARE PAGES + TUNNEL)
+-----------------------------------------------
+
+Step 1: Cloudflare Pages (Frontend)
+   - Connect your GitHub repository to Cloudflare Pages.
+   - Every time you 'git push', the website updates at https://ipcontrolsystem.pages.dev/
+
+Step 2: Install & Login Cloudflared
+   $ sudo pacman -S cloudflared
+   $ cloudflared tunnel login
+
+Step 3: Create the Tunnel
+   $ cloudflared tunnel create pendulum-tunnel
+   - Copy the Tunnel ID generated.
+
+Step 4: Configure config.yml
+   - Edit `cloudflared/config.yml`
+   - Paste your Tunnel ID and the path to your .json credentials file.
+
+Step 5: Create DNS Route (Run once)
+   $ cloudflared tunnel route dns pendulum-tunnel api.ipcontrolsystem.pages.dev
+
+Step 6: Start the Tunnel (Manual Test)
+   $ cloudflared tunnel --config ./cloudflared/config.yml run
+
+Step 7: Permanent Tunnel (Systemd)
+   $ sudo cp cloudflared/cloudflared.service /etc/systemd/system/
+   $ sudo systemctl daemon-reload
+   $ sudo systemctl enable --now cloudflared
+
+5. FUNCTIONS BREAKDOWN
+----------------------
+
+FRONTEND (app.js):
+- checkBackendConnection(): Pings the backend /health endpoint every 5s. 
+  Updates the Green/Red dot in the UI.
+- sendControlData(): Triggered by dropdown changes. Sends a POST request with:
+  { "control_type": "...", "com_port": "..." }
+- updateStats(): Updates the pendulum graphs and numbers in real-time.
+
+BACKEND (server.py):
+- @app.get("/health"): Returns {"status": "healthy"}. Used for the UI dot.
+- @app.post("/control"): Receives the dropdown values and prints them. 
+  This is where you add your logic to move the real pendulum.
+
+6. TROUBLESHOOTING
+------------------
+- DOT IS RED: 
+  1. Check if backend is running (python server.py).
+  2. Check if tunnel is running (systemctl status cloudflared).
+  3. Inspect Browser Console (F12) for CORS or 404 errors.
+- CORS ERROR: 
+  Ensure `backend/.env` contains ALLOWED_ORIGINS=https://ipcontrolsystem.pages.dev
+
+================================================================================
+Generated for: Arch Linux Environment
+Date: May 2026
+================================================================================
