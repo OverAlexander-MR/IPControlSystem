@@ -32,3 +32,5 @@ frontend/backend_url.json
 # OS files
 .DS_Store
 Thumbs.db
+
+INSTRUCTIONS.txt
