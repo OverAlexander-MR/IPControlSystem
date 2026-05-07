@@ -43,12 +43,14 @@ Step 3: Access
    - The status dot will turn GREEN automatically.
    - app.js (now in frontend/) detects 'localhost' and uses http://localhost:8000.
 
-4. PRODUCTION SETUP (CLOUDFLARE PAGES + TUNNEL)
------------------------------------------------
+4. PRODUCTION SETUP (CLOUDFLARE WORKERS + TUNNEL)
+-------------------------------------------------
 
-Step 1: Cloudflare Pages (Frontend)
-   - Connect your GitHub repository to Cloudflare Pages.
-   - Every time you 'git push', the website updates at https://ipcontrolsystem.pages.dev/
+Step 1: Cloudflare Workers (Frontend)
+   - Install Wrangler: `sudo pacman -S wrangler`
+   - Login to Cloudflare: `wrangler login`
+   - Deploy your frontend: `wrangler deploy`
+   - Your site will be at: `https://ipcontrolsystem.<your-username>.workers.dev`
 
 Step 2: Install & Login Cloudflared
    $ sudo pacman -S cloudflared
