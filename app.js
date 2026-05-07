@@ -10,16 +10,17 @@ class PendulumApp {
     // IMPORTANT: Replace this with your Cloudflare Tunnel URL in production
     this.backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:8000'
-      : 'https://api.ipcontrolsystem.pages.dev'; // Suggested tunnel subdomain
+      : 'https://api.ipcontrolsystem.pages.dev';
 
     this.initElements();
     this.initEventListeners();
     this.initCanvas();
 
-    // Initial check of backend connection
+    // Initial check and periodic health check
     this.checkBackendConnection();
+    setInterval(() => this.checkBackendConnection(), 5000);
 
-    // Actualizar estadísticas cada frame
+    // Start UI update loops
     this.updateStats();
   }
 
@@ -92,14 +93,17 @@ class PendulumApp {
 
   async checkBackendConnection() {
     try {
-      const response = await fetch(`${this.backendUrl}/health`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const response = await fetch(`${this.backendUrl}/health`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         this.updateStatusIndicator(true);
       } else {
         this.updateStatusIndicator(false);
       }
     } catch (error) {
-      console.error("Backend unreachable:", error);
       this.updateStatusIndicator(false);
     }
   }
@@ -124,124 +128,79 @@ class PendulumApp {
       com_port: this.comPort.value
     };
 
-    console.log("Sending control data to backend...", data);
-
     try {
       const response = await fetch(`${this.backendUrl}/control`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
       if (response.ok) {
-        const result = await response.json();
-        console.log("Backend response:", result);
         this.updateStatusIndicator(true);
       } else {
-        console.error("Backend error:", response.statusText);
         this.updateStatusIndicator(false);
       }
     } catch (error) {
-      console.error("Error connecting to backend:", error);
       this.updateStatusIndicator(false);
     }
   }
 
   initCanvas() {
     this.canvas = document.getElementById("pendulumCanvas");
+    if (!this.canvas) return;
     this.drawer = new PendulumDrawer(this.canvas);
 
-    // Inicializar gráficas si existe el canvas
     const graphsCanvas = document.getElementById("graphsCanvas");
-    if (graphsCanvas) {
-      this.initGraphs(graphsCanvas);
-    }
+    if (graphsCanvas) this.initGraphs(graphsCanvas);
   }
 
   initGraphs(canvas) {
     const ctx = canvas.getContext("2d");
-    canvas.width = 800;
-    canvas.height = 400;
-
-    // Dibujar gráfica de ejemplo
-    ctx.fillStyle = "#282a36";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "#bd93f9";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-
+    canvas.width = 800; canvas.height = 400;
+    ctx.fillStyle = "#282a36"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#bd93f9"; ctx.lineWidth = 2; ctx.beginPath();
     for (let i = 0; i <= 100; i++) {
-      const x = i * 8;
-      const y = 200 + 50 * Math.sin(i * 0.1);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      const x = i * 8; const y = 200 + 50 * Math.sin(i * 0.1);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
-
-    ctx.fillStyle = "#f8f8f2";
-    ctx.font = "14px monospace";
-    ctx.fillText("Gráficas de entrenamiento", 20, 30);
-    ctx.fillStyle = "#6272a4";
-    ctx.fillText("Loss", 20, 370);
-    ctx.fillText("Epochs", canvas.width - 60, 390);
   }
 
   toggleSidebar() {
     this.sidebar.classList.toggle("collapsed");
     const isExpanded = !this.sidebar.classList.contains("collapsed");
-
-    // Actualizar textos de los botones
     document.querySelectorAll(".nav-text").forEach((text) => {
       text.style.display = isExpanded ? "inline" : "none";
     });
   }
 
   navigateTo(pageId) {
-    // Ocultar todas las páginas
-    Object.values(this.pages).forEach((page) => {
-      if (page) page.classList.add("hidden");
-    });
-
-    // Mostrar página seleccionada
+    Object.values(this.pages).forEach((page) => { if (page) page.classList.add("hidden"); });
     const page = this.pages[pageId];
     if (page) page.classList.remove("hidden");
 
-    // Actualizar botón activo
     this.navBtns.forEach((btn) => {
       btn.classList.remove("active");
-      if (btn.dataset.page === pageId) {
-        btn.classList.add("active");
-      }
+      if (btn.dataset.page === pageId) btn.classList.add("active");
     });
 
-    // Detener simulación al salir de la página del péndulo
-    if (pageId !== "pendulum" && this.isRunning) {
-      this.stopSimulation();
-    }
+    if (pageId !== "pendulum" && this.isRunning) this.stopSimulation();
 
-    // Redibujar canvas al cambiar de página
     if (pageId === "pendulum" && this.simulator) {
       setTimeout(() => {
         const state = this.simulator.next(0);
-        this.drawer.draw(state.cartPos, state.theta);
+        if (this.drawer) this.drawer.draw(state.cartPos, state.theta);
       }, 100);
     }
   }
 
   startSimulation() {
     if (this.isRunning) return;
-
     this.isRunning = true;
     this.simulator.reset();
     this.simulator.setControlType(this.controlType.value);
-
-    console.log("Simulación iniciada");
     this.lastTimestamp = performance.now();
     this.simulationLoop();
-    
-    // Notify backend
     this.sendControlData();
   }
 
@@ -251,41 +210,29 @@ class PendulumApp {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
-    console.log("Simulación detenida");
   }
 
   simulationLoop() {
     if (!this.isRunning) return;
-
     const now = performance.now();
     let dt = Math.min(0.033, (now - this.lastTimestamp) / 1000);
-
     if (dt > 0.001) {
-      // Actualizar simulación
       const state = this.simulator.next(dt);
-
-      // Actualizar visualización
       this.drawer.draw(state.cartPos, state.theta);
-
-      // Actualizar estadísticas
       this.updateStatsDisplay(state);
-
       this.lastTimestamp = now;
     }
-
     this.animationId = requestAnimationFrame(() => this.simulationLoop());
   }
 
   updateStats() {
-    // Actualizar estadísticas cada frame desde la simulación
-    if (this.isRunning) return;
-
-    // Si no está corriendo, mostrar estado actual
-    if (this.simulator) {
+    if (!this.isRunning && this.simulator) {
         const state = this.simulator.next(0);
         this.updateStatsDisplay(state);
+        if (this.drawer && !this.pages.pendulum.classList.contains("hidden")) {
+            this.drawer.draw(state.cartPos, state.theta);
+        }
     }
-
     requestAnimationFrame(() => this.updateStats());
   }
 
@@ -293,15 +240,12 @@ class PendulumApp {
     if (this.positionVal) {
       this.positionVal.textContent = state.cartPos.toFixed(3);
       this.velocityVal.textContent = state.cartVel.toFixed(3);
-      this.angleVal.textContent =
-        ((state.theta * 180) / Math.PI).toFixed(1) + "°";
+      this.angleVal.textContent = ((state.theta * 180) / Math.PI).toFixed(1) + "°";
       this.angularVelVal.textContent = state.thetaDot.toFixed(3);
     }
   }
 }
 
-// Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", () => {
   const app = new PendulumApp();
-  console.log("Aplicación iniciada");
 });
