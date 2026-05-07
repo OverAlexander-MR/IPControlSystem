@@ -6,9 +6,18 @@ class PendulumApp {
     this.animationId = null;
     this.lastTimestamp = 0;
 
+    // Backend configuration
+    // IMPORTANT: Replace this with your Cloudflare Tunnel URL in production
+    this.backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:8000'
+      : 'https://api.ipcontrolsystem.pages.dev'; // Suggested tunnel subdomain
+
     this.initElements();
     this.initEventListeners();
     this.initCanvas();
+
+    // Initial check of backend connection
+    this.checkBackendConnection();
 
     // Actualizar estadísticas cada frame
     this.updateStats();
@@ -35,6 +44,7 @@ class PendulumApp {
     this.stopBtn = document.getElementById("stopBtn");
     this.trainBtn = document.getElementById("trainBtn");
     this.exitBtn = document.getElementById("exitBtn");
+    this.connectionStatus = document.getElementById("connectionStatus");
 
     // Estadísticas
     this.positionVal = document.getElementById("positionVal");
@@ -56,10 +66,12 @@ class PendulumApp {
     this.controlType.addEventListener("change", (e) => {
       this.simulator.setControlType(e.target.value);
       console.log(`Control type changed to: ${e.target.value}`);
+      this.sendControlData();
     });
 
     this.comPort.addEventListener("change", (e) => {
       console.log(`COM port selected: ${e.target.value}`);
+      this.sendControlData();
     });
 
     this.runBtn.addEventListener("click", () => this.startSimulation());
@@ -76,6 +88,65 @@ class PendulumApp {
         window.close();
       }
     });
+  }
+
+  async checkBackendConnection() {
+    try {
+      const response = await fetch(`${this.backendUrl}/health`);
+      if (response.ok) {
+        this.updateStatusIndicator(true);
+      } else {
+        this.updateStatusIndicator(false);
+      }
+    } catch (error) {
+      console.error("Backend unreachable:", error);
+      this.updateStatusIndicator(false);
+    }
+  }
+
+  updateStatusIndicator(connected) {
+    if (!this.connectionStatus) return;
+    const dot = this.connectionStatus.querySelector(".status-dot");
+    const text = this.connectionStatus.querySelector(".status-text");
+
+    if (connected) {
+      dot.style.backgroundColor = "#50fa7b";
+      text.textContent = "Local Backend: Connected";
+    } else {
+      dot.style.backgroundColor = "#ff5555";
+      text.textContent = "Local Backend: Disconnected";
+    }
+  }
+
+  async sendControlData() {
+    const data = {
+      control_type: this.controlType.value,
+      com_port: this.comPort.value
+    };
+
+    console.log("Sending control data to backend...", data);
+
+    try {
+      const response = await fetch(`${this.backendUrl}/control`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Backend response:", result);
+        this.updateStatusIndicator(true);
+      } else {
+        console.error("Backend error:", response.statusText);
+        this.updateStatusIndicator(false);
+      }
+    } catch (error) {
+      console.error("Error connecting to backend:", error);
+      this.updateStatusIndicator(false);
+    }
   }
 
   initCanvas() {
@@ -169,6 +240,9 @@ class PendulumApp {
     console.log("Simulación iniciada");
     this.lastTimestamp = performance.now();
     this.simulationLoop();
+    
+    // Notify backend
+    this.sendControlData();
   }
 
   stopSimulation() {
@@ -207,8 +281,10 @@ class PendulumApp {
     if (this.isRunning) return;
 
     // Si no está corriendo, mostrar estado actual
-    const state = this.simulator.next(0);
-    this.updateStatsDisplay(state);
+    if (this.simulator) {
+        const state = this.simulator.next(0);
+        this.updateStatsDisplay(state);
+    }
 
     requestAnimationFrame(() => this.updateStats());
   }

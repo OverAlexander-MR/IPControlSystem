@@ -1,2 +1,5 @@
 .env
 UI/icons
+cli.text
+backend/
+cloudflared/
